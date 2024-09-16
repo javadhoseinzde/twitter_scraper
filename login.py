@@ -36,7 +36,7 @@ class Twitter:
         print("Login successful.")
 
         # Save cookies to a file
-        with open("cookies.pkl", "wb") as cookies_file:
+        with open("data/cookies.pkl", "wb") as cookies_file:
             pickle.dump(self.driver.get_cookies(), cookies_file)
         print("Cookies saved.")
         time.sleep(5)
@@ -62,7 +62,7 @@ class Twitter:
 
         # Load cookies from file
         try:
-            with open("cookies.pkl", "rb") as cookies_file:
+            with open("data/cookies.pkl", "rb") as cookies_file:
                 cookies = pickle.load(cookies_file)
                 for cookie in cookies:
                     if 'sameSite' in cookie:

@@ -1,6 +1,5 @@
 from login import Twitter
 from  scrap import TwitterScraper
-from savefile import *
 import time
 from selenium import webdriver
 

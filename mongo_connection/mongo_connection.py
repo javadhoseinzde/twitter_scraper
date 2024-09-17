@@ -1,36 +1,30 @@
-import pymongo
+import os
 
+import pymongo
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class MongoConnection:
-    def __init__(self, host, port, username, password):
-        self.host = host
-        self.port = port
-
-        self.username = username
-        self.password = password
-        self.client = pymongo.MongoClient(f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/")
+    def __init__(self, host=None, port=None, username=None, password=None):
+        self.host = os.getenv("MONGODB_HOST", "localhost")
+        self.port = int(os.getenv("MONGODB_PORT", 27017))
+        self.username = os.getenv("MONGODB_USER")
+        self.password = os.getenv("MONGODB_PASS")
+        print(f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/")
+        self.client = pymongo.MongoClient(
+            f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/"
+        )
+        self.client.close
 
     def connect(self):
         databases = self.client.list_database_names()
         print(databases)
 
-    def create_collection(self, collection_name):
-        if collection_name in self.client.list_database_names():
-            return "collection already exists"
-        else:
-            db = self.client[collection_name]
-
-            collection = db[collection_name]
-
-            collection.insert_one({"name": "example", "value": 123})
-
-            dblist = self.client.list_database_names()
-            print("Databases after insert:", dblist)
-
-    def insert_data(self, collection_name, data):
+    def insert_data(self, db, collection_name, data):
         try:
-            db = self.client[collection_name]
+            db = self.client[db]
             collection = db[collection_name]
             collection.insert_one(data)
         except Exception as e:

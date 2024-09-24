@@ -10,6 +10,7 @@ from utils.split_username import split_username
 
 logging.basicConfig(level=logging.INFO)
 
+from human_behavior import HumanBehavior
 
 class TwitterScraper:
     def __init__(self, driver):
@@ -102,7 +103,7 @@ class TwitterScraper:
                                 "retweet": retweet_cnt,
                                 "action": "tweet",
                             }
-
+                            HumanBehavior(self.driver).post_like("post")
                             tweets_batch.append(json_data)
 
                             if len(tweets_batch) >= batch_size:

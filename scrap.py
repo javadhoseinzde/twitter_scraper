@@ -43,9 +43,9 @@ class TwitterScraper:
             )
 
             try:
-                WebDriverWait(self.driver, 30).until(
-                    EC.presence_of_all_elements_located((By.XPATH, "//article"))
-                )
+ #               WebDriverWait(self.driver, 30).until(
+  #                  EC.presence_of_all_elements_located((By.XPATH, "//article"))
+   #             )
 
                 tweets = self.driver.find_elements(By.XPATH, "//article")
 
@@ -103,7 +103,11 @@ class TwitterScraper:
                                 "retweet": retweet_cnt,
                                 "action": "tweet",
                             }
-                            HumanBehavior(self.driver).post_like("post")
+                            likes_button = tweet.find_element(
+                                By.XPATH, './/button[@data-testid="like"]'
+                            )
+
+                            HumanBehavior(self.driver).like_post("post")
                             tweets_batch.append(json_data)
 
                             if len(tweets_batch) >= batch_size:
@@ -124,12 +128,16 @@ class TwitterScraper:
                     "window.scrollTo(0, document.body.scrollHeight);"
                 )
 
-                WebDriverWait(self.driver, 30).until(
-                    lambda driver: driver.execute_script(
-                        "return document.body.scrollHeight"
-                    )
-                    > last_height
-                )
+#                WebDriverWait(self.driver, 30).until(
+ #                   lambda driver: driver.execute_script(
+  #                      "return document.body.scrollHeight"
+   #                 )
+    #                > last_height
+     #           )
+                self.driver.execute_script(
+                            "return document.body.scrollHeight"
+                        )
+
 
             except TimeoutException as e:
                 logging.error(f"Timeout while waiting for tweets: {e}")
@@ -141,9 +149,10 @@ class TwitterScraper:
 
     def _insert_batch(self, tweets_batch, collection_name):
         try:
-            self.mongo.insert_data(
-                db="twitter", collection_name=collection_name, data=tweets_batch
-            )
+            for tweet in tweets_batch:
+                self.mongo.insert_data(
+                    db="twitter", collection_name=collection_name, data=tweet
+                )
             logging.info(f"Inserted {len(tweets_batch)} tweets into MongoDB.")
         except Exception as e:
             logging.error(f"Error inserting data into MongoDB: {e}")

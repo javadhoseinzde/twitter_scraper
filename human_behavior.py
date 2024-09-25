@@ -13,7 +13,7 @@ class Personality_Type:
 	def wakeup_time(self):
 		pass
 
-	def create_post_time(self):
+	def create_post(self):
 		pass
 
 
@@ -22,11 +22,11 @@ class HumanBehavior:
 	def __init__(self, driver):
 		self.driver = driver
 
-
 	def like_post(self, post):
-		
-	def sleep(self):
+		print(post)
+		pass
 
+	def sleep(self):
 		pass
 
 	def wakeup(self):

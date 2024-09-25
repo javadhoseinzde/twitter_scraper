@@ -17,10 +17,12 @@ if __name__ == "__main__":
     driver = webdriver.Chrome(
         service=Service(ChromeDriverManager().install()), options=options
     )
+    Twitter("jhoseinzade1", "$Salam1234", driver).load_cookies_and_login()
 
-    Twitter("jhoseinzade1", "$Salam1234", driver).login() if os.path.exists(
-        "data/cookies.pkl"
-    ) else Twitter("jhoseinzade1", "$Salam1234", driver).load_cookies_and_login()
+#    Twitter("jhoseinzade1", "$Salam1234", driver).login() 
+#if os.path.exists(
+ #       "data/cookies.pkl"
+  #  ) else Twitter("jhoseinzade1", "$Salam1234", driver).load_cookies_and_login()
     time.sleep(10)
     print("salam")
     TwitterScraper(driver).scrape_posts()

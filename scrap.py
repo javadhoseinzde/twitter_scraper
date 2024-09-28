@@ -10,7 +10,8 @@ from utils.split_username import split_username
 
 logging.basicConfig(level=logging.INFO)
 
-from human_behavior import HumanBehavior
+from human_behavior import HumanBehavior, Personality_Type
+import time
 
 class TwitterScraper:
     def __init__(self, driver):
@@ -18,39 +19,33 @@ class TwitterScraper:
         self.scraped_tweet_ids = set()
         self.mongo = MongoConnection()
 
-    def scrap_comments(self):
-        self.driver.get("https://x.com/arbabkohestan/status/1835731849689079867")
-        return "after scrap comments"
-
     def scrape_posts(
         self, collection_name="sep-2024-home", scroll_attempts=5, batch_size=10
     ):
-        """
-        Scrapes tweets, waits for new content after scrolling, and saves data to MongoDB.
 
-        :param collection_name: The name of the MongoDB collection to store data.
-        :param scroll_attempts: Number of scroll attempts to make before stopping if no new content is found.
-        :param batch_size: Number of tweets to store in MongoDB at once to reduce insertion overhead.
-        """
         logging.info("Starting scrape_posts")
 
         attempts = 0
         tweets_batch = []
 
         while True:
+            print("before check")
+            # if Personality_Type().wakeup_time():
+                
             last_height = self.driver.execute_script(
                 "return document.body.scrollHeight"
             )
 
             try:
- #               WebDriverWait(self.driver, 30).until(
-  #                  EC.presence_of_all_elements_located((By.XPATH, "//article"))
-   #             )
+                WebDriverWait(self.driver, 60).until(
+                    EC.presence_of_all_elements_located((By.XPATH, "//article"))
+                )
 
                 tweets = self.driver.find_elements(By.XPATH, "//article")
 
                 new_tweets_found = False
 
+                #این قسمت شفاف شده
                 for tweet in tweets:
                     try:
                         # Extract tweet ID to check if it's new
@@ -110,6 +105,7 @@ class TwitterScraper:
                             HumanBehavior(self.driver).like_post("post")
                             tweets_batch.append(json_data)
 
+
                             if len(tweets_batch) >= batch_size:
                                 self._insert_batch(tweets_batch, collection_name)
                                 tweets_batch.clear()
@@ -124,25 +120,27 @@ class TwitterScraper:
                         f"No new tweets found, attempt {attempts}/{scroll_attempts}"
                     )
 
-                self.driver.execute_script(
-                    "window.scrollTo(0, document.body.scrollHeight);"
+                self.driver.execute_script("window.scrollBy(0, 1000);")
+
+                WebDriverWait(self.driver, 10).until(
+                    lambda driver: driver.execute_script(
+                        "return document.body.scrollHeight"
+                    )
+                    > last_height
                 )
-
-#                WebDriverWait(self.driver, 30).until(
- #                   lambda driver: driver.execute_script(
-  #                      "return document.body.scrollHeight"
-   #                 )
-    #                > last_height
-     #           )
-                self.driver.execute_script(
-                            "return document.body.scrollHeight"
-                        )
-
-
             except TimeoutException as e:
-                logging.error(f"Timeout while waiting for tweets: {e}")
-                break
+                logging.warning("Timeout occurred, increasing timeout and retrying...")
 
+                WebDriverWait(self.driver, 60).until(
+                    EC.presence_of_all_elements_located((By.XPATH, "//article"))
+                )
+                # Personality_Type.sleep_scrap()
+                # self.driver.get("https://x.com")
+
+            # else:
+            #     print("sleeping")
+            #     time.sleep(100)   
+                
         if tweets_batch:
             self._insert_batch(tweets_batch, collection_name)
         logging.info("Scraping complete")
@@ -153,6 +151,7 @@ class TwitterScraper:
                 self.mongo.insert_data(
                     db="twitter", collection_name=collection_name, data=tweet
                 )
+                    
             logging.info(f"Inserted {len(tweets_batch)} tweets into MongoDB.")
         except Exception as e:
             logging.error(f"Error inserting data into MongoDB: {e}")
